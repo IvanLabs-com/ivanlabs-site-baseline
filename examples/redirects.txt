@@ -1,0 +1,5 @@
+# source target — one mapping per line, relative paths resolve against --base
+# (this example is IvanLabs' own post-taxonomy-recut redirect map)
+/topics/platform-architecture-scaling/        /topics/platform-architecture-performance-reliability/
+/topics/platform-performance-reliability/     /topics/platform-architecture-performance-reliability/
+/blog/why-high-growth-platforms-lose-organic-traffic/  /blog/why-platforms-lose-traffic-during-growth/

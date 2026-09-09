@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ivanlabs-site-baseline"
+version = "0.1.0"
+description = "Validation toolkit for static sites: link integrity, JSON-LD health, redirect maps, live sitemap checks. Zero dependencies."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Ivan Popov", email = "ivan@ivanlabs.com" }]
+requires-python = ">=3.9"
+keywords = ["seo", "structured-data", "json-ld", "site-audit", "redirects", "migration", "llms-txt"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+]
+
+[project.urls]
+Homepage = "https://ivanlabs.com"
+Repository = "https://github.com/IvanLabs-com/ivanlabs-site-baseline"
+"Field notes" = "https://ivanlabs.com/blog/pre-migration-baseline-what-to-capture/"
+
+[project.scripts]
+site-baseline = "sitebaseline.__main__:main"
+
+[tool.setuptools]
+packages = ["sitebaseline"]
