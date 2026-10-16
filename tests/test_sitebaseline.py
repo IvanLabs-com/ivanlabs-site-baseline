@@ -266,10 +266,21 @@ class SchemaTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("entity types: Organization×1", out)
 
-    def test_deep_nesting_is_a_parse_error_not_a_crash(self):
+    def test_deep_nesting_does_not_crash_the_run(self):
+        # Most Pythons give up parsing this (reported as a parse error); 3.14+
+        # may parse it when the C stack is large. Either way the run finishes.
         code, out, _ = self.audit_html(self.ld("[" * 100000 + "]" * 100000))
+        self.assertIn("JSON-LD blocks:  1", out)
+        if code == 1:
+            self.assertIn("nested too deeply", out)
+        else:
+            self.assertEqual(code, 0)
+
+    def test_recursion_error_while_parsing_is_reported(self):
+        with mock.patch.object(schema.json, "loads", side_effect=RecursionError):
+            code, out, _ = self.audit_html(self.ld("[]"))
         self.assertEqual(code, 1)
-        self.assertIn("nested too deeply", out)
+        self.assertIn("INVALID index.html: nested too deeply to parse", out)
 
     def test_entity_artifacts_inside_arrays_are_found(self):
         doc = {"@type": "Person", "name": "Ivan", "sameAs": ["https:&#x2F;&#x2F;example.com"]}
