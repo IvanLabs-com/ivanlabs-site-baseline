@@ -1,0 +1,17 @@
+# The package has no runtime dependencies, so only the CI actions need
+# updating. The cooldown waits a week before proposing a newly published
+# version, giving a compromised release time to be caught and pulled first.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci
