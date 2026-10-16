@@ -12,22 +12,35 @@ import os
 import re
 import sys
 
+from .output import safe
+
 BLOCK_RE = re.compile(
     r"<script[^>]*type=[\"']?application/ld\+json[\"']?[^>]*>(.*?)</script>",
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
 ENTITY_RE = re.compile(r"&(#x?[0-9a-fA-F]+|amp|lt|gt|quot|apos);")
 
 
-def _scan_strings(node, hits, page):
-    if isinstance(node, dict):
-        for key, value in node.items():
-            if isinstance(value, str) and ENTITY_RE.search(value):
+def _scan_strings(doc, hits, page):
+    """Record string values that contain HTML entities, in document order.
+
+    Strings inside arrays (e.g. ``sameAs`` URL lists) are reported under the
+    array's key. Iterative, so deeply nested input cannot exhaust the stack.
+    """
+    stack = [iter([(None, doc)])]
+    while stack:
+        try:
+            key, value = next(stack[-1])
+        except StopIteration:
+            stack.pop()
+            continue
+        if isinstance(value, str):
+            if key is not None and ENTITY_RE.search(value):
                 hits.append((page, key, value[:80]))
-            _scan_strings(value, hits, page)
-    elif isinstance(node, list):
-        for item in node:
-            _scan_strings(item, hits, page)
+        elif isinstance(value, dict):
+            stack.append(iter(value.items()))
+        elif isinstance(value, list):
+            stack.append((key, item) for item in value)
 
 
 def _nodes(doc):
@@ -49,7 +62,7 @@ def audit(root):
             if name.endswith(".html"):
                 pages.append(os.path.join(r, name))
     if not pages:
-        print(f"error: no .html files under {root}", file=sys.stderr)
+        print(f"error: no .html files under {safe(root)}", file=sys.stderr)
         return 2
 
     blocks = 0
@@ -69,6 +82,9 @@ def audit(root):
             except ValueError as exc:
                 parse_errors.append((rel, str(exc)))
                 continue
+            except RecursionError:
+                parse_errors.append((rel, "nested too deeply to parse"))
+                continue
             _scan_strings(doc, entity_hits, rel)
             for node in _nodes(doc):
                 if not isinstance(node, dict):
@@ -83,16 +99,16 @@ def audit(root):
     print(f"JSON-LD blocks:  {blocks}")
     print(f"parse errors:    {len(parse_errors)}")
     for rel, err in parse_errors:
-        print(f"  INVALID {rel}: {err}")
+        print(f"  INVALID {safe(rel)}: {safe(err)}")
     print(f"entity-escape artifacts in string values: {len(entity_hits)}")
     for rel, key, val in entity_hits[:20]:
-        print(f"  ESCAPED {rel} [{key}]: {val}")
+        print(f"  ESCAPED {safe(rel)} [{safe(key)}]: {safe(val)}")
     if missing_sameas:
         seen = sorted(set(missing_sameas))
         print(f"Person/Organization nodes without sameAs: {len(seen)}")
         for rel, t in seen[:10]:
-            print(f"  NO-SAMEAS {t} on {rel}")
+            print(f"  NO-SAMEAS {safe(t)} on {safe(rel)}")
     if types:
-        print("entity types: " + ", ".join(f"{k}×{v}" for k, v in sorted(types.items())))
+        print("entity types: " + ", ".join(f"{safe(k)}×{v}" for k, v in sorted(types.items())))
 
     return 1 if (parse_errors or entity_hits) else 0

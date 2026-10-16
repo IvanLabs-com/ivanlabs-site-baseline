@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ivanlabs-site-baseline"
-version = "0.1.0"
+version = "0.2.0"
 description = "Validation toolkit for static sites: link integrity, JSON-LD health, redirect maps, live sitemap checks. Zero dependencies."
 readme = "README.md"
 license = { text = "MIT" }
