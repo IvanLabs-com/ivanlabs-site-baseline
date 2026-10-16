@@ -33,6 +33,9 @@ def main(argv=None):
 
     p_live = sub.add_parser("live", help="verify every sitemap URL returns 200")
     p_live.add_argument("sitemap", help="sitemap or sitemap-index URL")
+    p_live.add_argument("--allow-cross-host", action="store_true",
+                        help="also fetch sitemap URLs on other hosts (by default they are "
+                             "reported, not requested)")
 
     args = parser.parse_args(argv)
 
@@ -47,7 +50,7 @@ def main(argv=None):
         return redirects.verify(args.map, args.base)
     if args.command == "live":
         from . import live
-        return live.verify(args.sitemap)
+        return live.verify(args.sitemap, allow_cross_host=args.allow_cross_host)
     return 2
 
 
